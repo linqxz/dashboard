@@ -7,7 +7,7 @@ dependencies:
   - sqlalchemy
   - pip
   - pip:
-      - hummingbot
+      - git+https://${GITHUB_TOKEN}@github.com/linqxz/hbot-rs.git
       - hummingbot-api-client
       - nest_asyncio
       - pydantic
