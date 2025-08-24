@@ -21,7 +21,7 @@ def _inject_global_theme():
         <style>
             /* Using self-hosted Inter via theme.fontFaces; no external import needed */
             @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
-            @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..700,0..1,-50..200');  # noqa: E501
+            @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..700,0..1,-50..200');
             :root {
                 --bg: #0b0f17;
                 --surface: #0f172a;

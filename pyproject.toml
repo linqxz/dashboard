@@ -2,12 +2,15 @@
 requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[tool.flake8]
+ignore = ["E501"]
+
 [tool.black]
-line-length = 130
+line-length = 145
 target-version = ["py38"]
 
 [tool.isort]
-line_length = 130
+line_length = 145
 profile = "black"
 multi_line_output = 3
 include_trailing_comma = true
