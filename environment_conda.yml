@@ -7,11 +7,11 @@ dependencies:
   - sqlalchemy
   - pip
   - pip:
-      - git+https://${GITHUB_TOKEN}@github.com/linqxz/hbot-rs.git
+      - /Users/linus/PycharmProjects/Runesight/hbot-prod/dist/hummingbot-2.7.0-cp312-cp312-macosx_11_0_arm64.whl
       - hummingbot-api-client
       - nest_asyncio
       - pydantic
-      - streamlit>=1.36.0
+      - streamlit>=1.36.0exi
       - watchdog
       - python-dotenv
       - plotly==5.24.1

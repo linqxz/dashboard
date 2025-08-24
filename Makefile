@@ -43,7 +43,7 @@ install-pre-commit:
 	fi && pre-commit install'
 
 docker_build:
-	docker build -t hummingbot/dashboard:latest .
+	docker build -t runesight/dashboard:latest .
 
 docker_run:
-	docker run -p 8501:8501 hummingbot/dashboard:latest
+	docker run -p 8501:8501 runesight/dashboard:latest

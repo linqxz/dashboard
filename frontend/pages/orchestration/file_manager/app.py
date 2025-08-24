@@ -8,7 +8,7 @@ from frontend.components.dashboard import Dashboard
 from frontend.components.editor import Editor
 from frontend.st_utils import initialize_st_page
 
-initialize_st_page(title="Strategy Configs", icon="🗂️")
+initialize_st_page(title="Strategy Configs", icon=None, ms_icon="folder")
 
 
 if "fe_board" not in st.session_state:
@@ -34,7 +34,9 @@ for tab_name in list(fe_board.editor.tabs.keys()):
         fe_board.editor.remove_tab(tab_name)
 
 with elements("file_manager"):
-    with mui.Paper(elevation=3, style={"padding": "2rem"}, spacing=[2, 2], container=True):
+    with mui.Paper(
+        elevation=3, style={"padding": "2rem"}, spacing=[2, 2], container=True
+    ):
         with fe_board.dashboard():
             fe_board.file_explorer()
             fe_board.editor()

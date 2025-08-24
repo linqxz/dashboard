@@ -1,6 +1,24 @@
-[theme]
-base="dark"
-font="monospace"
 [server]
 port=8501
 maxUploadSize = 700
+enableStaticServing = true
+
+[[theme.fontFaces]]
+url = "app/static/Inter/Inter-VariableFont_opsz,wght.ttf"
+family = "Inter"
+style = "normal"
+weight = "100 900"
+
+[[theme.fontFaces]]
+family = "Inter"
+url = "app/static/Inter/Inter-Italic-VariableFont_opsz,wght.ttf"
+style = "italic"
+weight = "100 900"
+
+[theme]
+base="dark"
+font="Inter"
+primaryColor="#8b5cf6"
+backgroundColor="#0b0f17"
+secondaryBackgroundColor="#0f172a"
+textColor="#e5e7eb"

@@ -5,7 +5,7 @@ import streamlit as st
 
 from frontend.st_utils import get_backend_api_client, initialize_st_page
 
-initialize_st_page(icon="🦅", show_readme=False)
+initialize_st_page(icon=None, show_readme=False, ms_icon="hub")
 
 # Initialize backend client
 backend_api_client = get_backend_api_client()
@@ -45,9 +45,7 @@ def stop_controllers(bot_name, controllers):
     for controller in controllers:
         try:
             backend_api_client.controllers.update_bot_controller_config(
-                bot_name,
-                controller,
-                {"manual_kill_switch": True}
+                bot_name, controller, {"manual_kill_switch": True}
             )
             success_count += 1
         except Exception as e:
@@ -67,9 +65,7 @@ def start_controllers(bot_name, controllers):
     for controller in controllers:
         try:
             backend_api_client.controllers.update_bot_controller_config(
-                bot_name,
-                controller,
-                {"manual_kill_switch": False}
+                bot_name, controller, {"manual_kill_switch": False}
             )
             success_count += 1
         except Exception as e:
@@ -96,21 +92,30 @@ def render_bot_card(bot_name):
             is_running = bot_data.get("status") == "running"
             if is_running:
                 try:
-                    controller_configs = backend_api_client.controllers.get_bot_controller_configs(bot_name)
-                    controller_configs = controller_configs if controller_configs else []
+                    controller_configs = (
+                        backend_api_client.controllers.get_bot_controller_configs(
+                            bot_name
+                        )
+                    )
+                    controller_configs = (
+                        controller_configs if controller_configs else []
+                    )
                 except Exception as e:
                     # If controller configs fail, continue without them
-                    st.warning(f"Could not fetch controller configs for {bot_name}: {e}")
+                    st.warning(
+                        f"Could not fetch controller configs for {bot_name}: {e}"
+                    )
                     controller_configs = []
 
         with st.container(border=True):
-
             if bot_status.get("status") == "error":
                 # Error state
                 col1, col2 = st.columns([3, 1])
                 with col1:
-                    st.error(f"🤖 **{bot_name}** - Not Available")
-                st.error(f"An error occurred while fetching bot status of {bot_name}. Please check the bot client.")
+                    st.error(f"Bot {bot_name} - Not Available")
+                st.error(
+                    f"An error occurred while fetching bot status of {bot_name}. Please check the bot client."
+                )
             else:
                 bot_data = bot_status.get("data", {})
                 is_running = bot_data.get("status") == "running"
@@ -122,16 +127,22 @@ def render_bot_card(bot_name):
                 col1, col2, col3 = st.columns([2, 1, 1])
                 with col1:
                     if is_running:
-                        st.success(f"🤖 **{bot_name}** - Running")
+                        st.success(f"{bot_name} - Running")
                     else:
-                        st.warning(f"🤖 **{bot_name}** - Stopped")
+                        st.warning(f"{bot_name} - Stopped")
 
                 with col3:
                     if is_running:
-                        if st.button("⏹️ Stop", key=f"stop_{bot_name}", use_container_width=True):
+                        if st.button(
+                            "Stop", key=f"stop_{bot_name}", use_container_width=True
+                        ):
                             stop_bot(bot_name)
                     else:
-                        if st.button("📦 Archive", key=f"archive_{bot_name}", use_container_width=True):
+                        if st.button(
+                            "Archive",
+                            key=f"archive_{bot_name}",
+                            use_container_width=True,
+                        ):
                             archive_bot(bot_name)
 
                 if is_running:
@@ -146,29 +157,48 @@ def render_bot_card(bot_name):
                     for controller, inner_dict in performance.items():
                         controller_status = inner_dict.get("status")
                         if controller_status == "error":
-                            error_controllers.append({
-                                "Controller": controller,
-                                "Error": inner_dict.get("error", "Unknown error")
-                            })
+                            error_controllers.append(
+                                {
+                                    "Controller": controller,
+                                    "Error": inner_dict.get("error", "Unknown error"),
+                                }
+                            )
                             continue
 
                         controller_performance = inner_dict.get("performance", {})
                         controller_config = next(
-                            (config for config in controller_configs if config.get("id") == controller), {}
+                            (
+                                config
+                                for config in controller_configs
+                                if config.get("id") == controller
+                            ),
+                            {},
                         )
 
-                        controller_name = controller_config.get("controller_name", controller)
+                        controller_name = controller_config.get(
+                            "controller_name", controller
+                        )
 
                         connector_name = controller_config.get("connector_name", "N/A")
                         trading_pair = controller_config.get("trading_pair", "N/A")
-                        kill_switch_status = controller_config.get("manual_kill_switch", False)
+                        kill_switch_status = controller_config.get(
+                            "manual_kill_switch", False
+                        )
 
-                        realized_pnl_quote = controller_performance.get("realized_pnl_quote", 0)
-                        unrealized_pnl_quote = controller_performance.get("unrealized_pnl_quote", 0)
-                        global_pnl_quote = controller_performance.get("global_pnl_quote", 0)
+                        realized_pnl_quote = controller_performance.get(
+                            "realized_pnl_quote", 0
+                        )
+                        unrealized_pnl_quote = controller_performance.get(
+                            "unrealized_pnl_quote", 0
+                        )
+                        global_pnl_quote = controller_performance.get(
+                            "global_pnl_quote", 0
+                        )
                         volume_traded = controller_performance.get("volume_traded", 0)
 
-                        close_types = controller_performance.get("close_type_counts", {})
+                        close_types = controller_performance.get(
+                            "close_type_counts", {}
+                        )
                         tp = close_types.get("CloseType.TAKE_PROFIT", 0)
                         sl = close_types.get("CloseType.STOP_LOSS", 0)
                         time_limit = close_types.get("CloseType.TIME_LIMIT", 0)
@@ -188,7 +218,7 @@ def render_bot_card(bot_name):
                             "NET PNL ($)": round(global_pnl_quote, 2),
                             "Volume ($)": round(volume_traded, 2),
                             "Close Types": close_types_str,
-                            "_controller_id": controller
+                            "_controller_id": controller,
                         }
 
                         if kill_switch_status:
@@ -200,23 +230,31 @@ def render_bot_card(bot_name):
                         total_volume_traded += volume_traded
                         total_unrealized_pnl_quote += unrealized_pnl_quote
 
-                    total_global_pnl_pct = total_global_pnl_quote / total_volume_traded if total_volume_traded > 0 else 0
+                    total_global_pnl_pct = (
+                        total_global_pnl_quote / total_volume_traded
+                        if total_volume_traded > 0
+                        else 0
+                    )
 
                     # Display metrics
                     col1, col2, col3, col4 = st.columns(4)
 
                     with col1:
-                        st.metric("🏦 NET PNL", f"${total_global_pnl_quote:.2f}")
+                        st.metric("NET PNL", f"${total_global_pnl_quote:.2f}")
                     with col2:
-                        st.metric("💹 Unrealized PNL", f"${total_unrealized_pnl_quote:.2f}")
+                        st.metric(
+                            "Unrealized PNL", f"${total_unrealized_pnl_quote:.2f}"
+                        )
                     with col3:
-                        st.metric("📊 NET PNL (%)", f"{total_global_pnl_pct:.2%}")
+                        st.metric("NET PNL (%)", f"{total_global_pnl_pct:.2%}")
                     with col4:
-                        st.metric("💸 Volume Traded", f"${total_volume_traded:.2f}")
+                        st.metric("Volume Traded", f"${total_volume_traded:.2f}")
 
                     # Active Controllers
                     if active_controllers:
-                        st.success("🚀 **Active Controllers:** Controllers currently running and trading")
+                        st.success(
+                            "Active Controllers: Controllers currently running and trading"
+                        )
                         active_df = pd.DataFrame(active_controllers)
 
                         edited_active_df = st.data_editor(
@@ -229,10 +267,12 @@ def render_bot_card(bot_name):
                                 ),
                                 "_controller_id": None,  # Hide this column
                             },
-                            disabled=[col for col in active_df.columns if col != "Select"],
+                            disabled=[
+                                col for col in active_df.columns if col != "Select"
+                            ],
                             hide_index=True,
                             use_container_width=True,
-                            key=f"active_table_{bot_name}"
+                            key=f"active_table_{bot_name}",
                         )
 
                         selected_active = [
@@ -242,16 +282,22 @@ def render_bot_card(bot_name):
                         ]
 
                         if selected_active:
-                            if st.button(f"⏹️ Stop Selected ({len(selected_active)})",
-                                         key=f"stop_active_{bot_name}",
-                                         type="secondary"):
-                                with st.spinner(f"Stopping {len(selected_active)} controller(s)..."):
+                            if st.button(
+                                f"Stop Selected ({len(selected_active)})",
+                                key=f"stop_active_{bot_name}",
+                                type="secondary",
+                            ):
+                                with st.spinner(
+                                    f"Stopping {len(selected_active)} controller(s)..."
+                                ):
                                     stop_controllers(bot_name, selected_active)
                                     time.sleep(1)
 
                     # Stopped Controllers
                     if stopped_controllers:
-                        st.warning("💤 **Stopped Controllers:** Controllers that are paused or stopped")
+                        st.warning(
+                            "Stopped Controllers: Controllers that are paused or stopped"
+                        )
                         stopped_df = pd.DataFrame(stopped_controllers)
 
                         edited_stopped_df = st.data_editor(
@@ -264,10 +310,12 @@ def render_bot_card(bot_name):
                                 ),
                                 "_controller_id": None,  # Hide this column
                             },
-                            disabled=[col for col in stopped_df.columns if col != "Select"],
+                            disabled=[
+                                col for col in stopped_df.columns if col != "Select"
+                            ],
                             hide_index=True,
                             use_container_width=True,
-                            key=f"stopped_table_{bot_name}"
+                            key=f"stopped_table_{bot_name}",
                         )
 
                         selected_stopped = [
@@ -277,21 +325,29 @@ def render_bot_card(bot_name):
                         ]
 
                         if selected_stopped:
-                            if st.button(f"▶️ Start Selected ({len(selected_stopped)})",
-                                         key=f"start_stopped_{bot_name}",
-                                         type="primary"):
-                                with st.spinner(f"Starting {len(selected_stopped)} controller(s)..."):
+                            if st.button(
+                                f"Start Selected ({len(selected_stopped)})",
+                                key=f"start_stopped_{bot_name}",
+                                type="primary",
+                            ):
+                                with st.spinner(
+                                    f"Starting {len(selected_stopped)} controller(s)..."
+                                ):
                                     start_controllers(bot_name, selected_stopped)
                                     time.sleep(1)
 
                     # Error Controllers
                     if error_controllers:
-                        st.error("💀 **Controllers with Errors:** Controllers that encountered errors")
+                        st.error(
+                            "Controllers with Errors: Controllers that encountered errors"
+                        )
                         error_df = pd.DataFrame(error_controllers)
-                        st.dataframe(error_df, use_container_width=True, hide_index=True)
+                        st.dataframe(
+                            error_df, use_container_width=True, hide_index=True
+                        )
 
                 # Logs sections (available for both running and stopped bots)
-                with st.expander("📋 Error Logs"):
+                with st.expander("Error Logs"):
                     if error_logs:
                         for log in error_logs[:50]:
                             timestamp = log.get("timestamp", "")
@@ -301,10 +357,12 @@ def render_bot_card(bot_name):
                     else:
                         st.info("No error logs available.")
 
-                with st.expander("📝 General Logs"):
+                with st.expander("General Logs"):
                     if general_logs:
                         for log in general_logs[:50]:
-                            timestamp = pd.to_datetime(int(log.get("timestamp", 0)), unit="s")
+                            timestamp = pd.to_datetime(
+                                int(log.get("timestamp", 0)), unit="s"
+                            )
                             message = log.get("msg", "")
                             logger_name = log.get("logger_name", "")
                             st.text(f"{timestamp} - {logger_name}: {message}")
@@ -313,12 +371,12 @@ def render_bot_card(bot_name):
 
     except Exception as e:
         with st.container(border=True):
-            st.error(f"🤖 **{bot_name}** - Error")
+            st.error(f"{bot_name} - Error")
             st.error(f"An error occurred while fetching bot status: {str(e)}")
 
 
 # Page Header
-st.title("🦅 Hummingbot Instances")
+st.title("Hummingbot Instances")
 
 # Auto-refresh controls
 col1, col2, col3 = st.columns([3, 1, 1])
@@ -327,23 +385,33 @@ col1, col2, col3 = st.columns([3, 1, 1])
 status_placeholder = col1.empty()
 
 with col2:
-    if st.button("▶️ Start Auto-refresh" if not st.session_state.auto_refresh_enabled else "⏸️ Stop Auto-refresh",
-                 use_container_width=True):
-        st.session_state.auto_refresh_enabled = not st.session_state.auto_refresh_enabled
+    if st.button(
+        "Start Auto-refresh"
+        if not st.session_state.auto_refresh_enabled
+        else "Stop Auto-refresh",
+        use_container_width=True,
+    ):
+        st.session_state.auto_refresh_enabled = (
+            not st.session_state.auto_refresh_enabled
+        )
 
 with col3:
-    if st.button("🔄 Refresh Now", use_container_width=True):
+    if st.button("Refresh Now", use_container_width=True):
         # Re-enable auto-refresh if it was temporarily disabled
         if not st.session_state.auto_refresh_enabled:
             st.session_state.auto_refresh_enabled = True
         pass
 
 
-@st.fragment(run_every=REFRESH_INTERVAL if st.session_state.auto_refresh_enabled else None)
+@st.fragment(
+    run_every=REFRESH_INTERVAL if st.session_state.auto_refresh_enabled else None
+)
 def show_bot_instances():
     """Fragment to display bot instances with auto-refresh."""
     try:
-        active_bots_response = backend_api_client.bot_orchestration.get_active_bots_status()
+        active_bots_response = (
+            backend_api_client.bot_orchestration.get_active_bots_status()
+        )
 
         if active_bots_response.get("status") == "success":
             active_bots = active_bots_response.get("data", {})
@@ -352,7 +420,9 @@ def show_bot_instances():
             truly_active_bots = {}
             for bot_name, bot_info in active_bots.items():
                 try:
-                    bot_status = backend_api_client.bot_orchestration.get_bot_status(bot_name)
+                    bot_status = backend_api_client.bot_orchestration.get_bot_status(
+                        bot_name
+                    )
                     if bot_status.get("status") == "success":
                         bot_data = bot_status.get("data", {})
                         if bot_data.get("status") in ["running", "stopped"]:
@@ -363,15 +433,21 @@ def show_bot_instances():
             if truly_active_bots:
                 # Show refresh status
                 if st.session_state.auto_refresh_enabled:
-                    status_placeholder.info(f"🔄 Auto-refreshing every {REFRESH_INTERVAL} seconds")
+                    status_placeholder.info(
+                        f"Auto-refreshing every {REFRESH_INTERVAL} seconds"
+                    )
                 else:
-                    status_placeholder.warning("⏸️ Auto-refresh paused. Click 'Refresh Now' to resume.")
+                    status_placeholder.warning(
+                        "Auto-refresh paused. Click 'Refresh Now' to resume."
+                    )
 
                 # Render each bot
                 for bot_name in truly_active_bots.keys():
                     render_bot_card(bot_name)
             else:
-                status_placeholder.info("No active bot instances found. Deploy a bot to see it here.")
+                status_placeholder.info(
+                    "No active bot instances found. Deploy a bot to see it here."
+                )
         else:
             st.error("Failed to fetch active bots status.")
 

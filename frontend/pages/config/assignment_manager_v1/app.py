@@ -8,11 +8,11 @@ from frontend.pages.config.assignment_manager_v1.user_inputs import user_inputs
 from frontend.st_utils import get_backend_api_client, initialize_st_page
 
 # Initialize the Streamlit page
-initialize_st_page(title="Assignment Manager v1", icon="🎯")
+initialize_st_page(title="Assignment Manager v1", icon=None, ms_icon="task")
 backend_api_client = get_backend_api_client()
 
 # Page content
-st.title("🎯 Assignment Manager v1 Configuration")
+st.title("Assignment Manager v1 Configuration")
 st.markdown("""
 This tool lets you create and manage configurations for the **Assignment Manager Controller**.
 
@@ -20,10 +20,10 @@ The Assignment Manager monitors your exchange for position assignments (like opt
 and automatically creates executors to close those positions using configurable risk management parameters.
 
 **Key Features:**
-- 📊 **Exchange Monitoring**: Watches for assignment events on supported exchanges
-- 🎯 **Automated Position Closing**: Creates executors to close assigned positions
-- 🛡️ **Risk Management**: Configurable stop loss, take profit, and trailing stops
-- ⚙️ **Flexible Configuration**: Support for specific trading pairs or all pairs
+- Exchange monitoring across supported exchanges
+- Automated position closing on assignment
+- Risk management: stop loss, take profit, trailing stops
+- Flexible configuration for specific pairs or all pairs
 """)
 
 st.write("---")
@@ -38,42 +38,60 @@ inputs = user_inputs()
 st.session_state["default_config"].update(inputs)
 
 # Display configuration visualization/summary
-with st.expander("🔍 Live Configuration Preview", expanded=True):
+with st.expander("Live Configuration Preview", expanded=True):
     col1, col2 = st.columns([1, 1])
 
     with col1:
-        st.subheader("📊 Exchange Setup")
-        st.code(f"""
-Connector: {inputs['connector_name']}
-Monitor All Pairs: {inputs['all_trading_pairs']}
-""" + (f"Specific Pairs: {len(inputs['trading_pairs'])} pairs" if not inputs['all_trading_pairs'] else ""), language="yaml")
+        st.subheader("Exchange Setup")
+        st.code(
+            f"""
+Connector: {inputs["connector_name"]}
+Monitor All Pairs: {inputs["all_trading_pairs"]}
+"""
+            + (
+                f"Specific Pairs: {len(inputs['trading_pairs'])} pairs"
+                if not inputs["all_trading_pairs"]
+                else ""
+            ),
+            language="yaml",
+        )
 
-        st.subheader("⚙️ Order Management")
-        st.code(f"""
-Order Type: {inputs['order_type']}
-Close Percentage: {inputs['close_percent']}%
-Slippage Buffer: {inputs['slippage_buffer'] * 100:.3f}%
-Max Order Age: {inputs['max_order_age']}s
-""", language="yaml")
+        st.subheader("Order Management")
+        st.code(
+            f"""
+Order Type: {inputs["order_type"]}
+Close Percentage: {inputs["close_percent"]}%
+Slippage Buffer: {inputs["slippage_buffer"] * 100:.3f}%
+Max Order Age: {inputs["max_order_age"]}s
+""",
+            language="yaml",
+        )
 
     with col2:
-        st.subheader("🛡️ Risk Management")
+        st.subheader("Risk Management")
 
         # Show risk management configuration
         risk_config = f"Time Limit: {inputs['time_limit']}s"
-        if inputs['time_limit'] == 0:
+        if inputs["time_limit"] == 0:
             risk_config += " (Immediate close)"
         else:
             risk_config += " (Barriers enabled)"
 
         risk_config += "\nStop Loss: "
-        risk_config += f"{inputs['stop_loss_pct']}%" if inputs['stop_loss_pct'] else "Disabled"
+        risk_config += (
+            f"{inputs['stop_loss_pct']}%" if inputs["stop_loss_pct"] else "Disabled"
+        )
 
         risk_config += "\nTake Profit: "
-        risk_config += f"{inputs['take_profit_pct']}%" if inputs['take_profit_pct'] else "Disabled"
+        risk_config += (
+            f"{inputs['take_profit_pct']}%" if inputs["take_profit_pct"] else "Disabled"
+        )
 
         risk_config += "\nTrailing Stop: "
-        if inputs['trailing_stop_activation_pct'] and inputs['trailing_stop_trailing_delta_pct']:
+        if (
+            inputs["trailing_stop_activation_pct"]
+            and inputs["trailing_stop_trailing_delta_pct"]
+        ):
             risk_config += f"{inputs['trailing_stop_activation_pct']}% / {inputs['trailing_stop_trailing_delta_pct']}%"
         else:
             risk_config += "Disabled"
@@ -81,10 +99,12 @@ Max Order Age: {inputs['max_order_age']}s
         st.code(risk_config, language="yaml")
 
         # Show trading pairs if not monitoring all
-        if not inputs['all_trading_pairs'] and inputs['trading_pairs']:
-            st.subheader("🎯 Monitored Pairs")
-            pairs_text = "\n".join([f"- {pair}" for pair in inputs['trading_pairs'][:10]])
-            if len(inputs['trading_pairs']) > 10:
+        if not inputs["all_trading_pairs"] and inputs["trading_pairs"]:
+            st.subheader("Monitored Pairs")
+            pairs_text = "\n".join(
+                [f"- {pair}" for pair in inputs["trading_pairs"][:10]]
+            )
+            if len(inputs["trading_pairs"]) > 10:
                 pairs_text += f"\n... and {len(inputs['trading_pairs']) - 10} more"
             st.code(pairs_text, language="yaml")
 
@@ -93,29 +113,40 @@ warning_messages = []
 info_messages = []
 
 # Validate configuration
-if not inputs['all_trading_pairs'] and not inputs['trading_pairs']:
-    warning_messages.append("⚠️ No trading pairs specified. Please enable 'Monitor All Trading Pairs' or specify specific pairs.")
+if not inputs["all_trading_pairs"] and not inputs["trading_pairs"]:
+    warning_messages.append(
+        "No trading pairs specified. Please enable 'Monitor All Trading Pairs' or specify specific pairs."
+    )
 
-if inputs['time_limit'] == 0:
-    info_messages.append("ℹ️ Time limit is set to 0 - positions will be closed immediately upon assignment.")
+if inputs["time_limit"] == 0:
+    info_messages.append(
+        "Time limit is set to 0 - positions will be closed immediately upon assignment."
+    )
 
-if inputs['close_percent'] < 100:
-    info_messages.append(f"ℹ️ Only {inputs['close_percent']}% of assigned positions will be closed.")
+if inputs["close_percent"] < 100:
+    info_messages.append(
+        f"Only {inputs['close_percent']}% of assigned positions will be closed."
+    )
 
 # Risk management validation
-if inputs['time_limit'] > 0:
+if inputs["time_limit"] > 0:
     risk_features = []
-    if inputs['stop_loss_pct']:
+    if inputs["stop_loss_pct"]:
         risk_features.append("Stop Loss")
-    if inputs['take_profit_pct']:
+    if inputs["take_profit_pct"]:
         risk_features.append("Take Profit")
-    if inputs['trailing_stop_activation_pct'] and inputs['trailing_stop_trailing_delta_pct']:
+    if (
+        inputs["trailing_stop_activation_pct"]
+        and inputs["trailing_stop_trailing_delta_pct"]
+    ):
         risk_features.append("Trailing Stop")
 
     if risk_features:
-        info_messages.append(f"✅ Risk management active: {', '.join(risk_features)}")
+        info_messages.append(f"Risk management active: {', '.join(risk_features)}")
     else:
-        warning_messages.append("⚠️ Time limit is enabled but no risk management features are configured.")
+        warning_messages.append(
+            "Time limit is enabled but no risk management features are configured."
+        )
 
 # Display warnings and info
 if warning_messages:
@@ -127,7 +158,7 @@ if info_messages:
         st.info(msg)
 
 # Usage instructions
-with st.expander("📖 Usage Instructions", expanded=False):
+with st.expander("Usage Instructions", expanded=False):
     st.markdown("""
     ### How the Assignment Manager Works
 
@@ -171,4 +202,6 @@ with st.expander("📖 Usage Instructions", expanded=False):
 st.write("---")
 
 # Render the save configuration section
-render_save_config(st.session_state["default_config"]["id"], st.session_state["default_config"])
+render_save_config(
+    st.session_state["default_config"]["id"], st.session_state["default_config"]
+)
